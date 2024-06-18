@@ -1,13 +1,16 @@
 import { collection, deleteDoc, doc, getDocs, orderBy, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
 import { db } from '../../firbase-config';
+import { useNavigate } from 'react-router-dom';
 
 const Items = () => {
     const [items, setItems] = useState([]);
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
     const [message, setMessage] = useState('');
+
     const dataRef = collection(db, 'items');
+    const navigate = useNavigate();
 
     async function getItems() {
       const allItems = await getDocs(dataRef);
@@ -40,23 +43,25 @@ const Items = () => {
     };
 
     const handleSelect = async () => {
-        
+        if (!from && !to) {
+            return
+        }
         let convertFrom = parseFloat(from);
         let convertTo = parseFloat(to);
         if (!convertFrom) {
             convertFrom = 0;
-            setFrom(0);
+            setFrom('');
         };
         if (!convertTo) {
             convertTo = 1000;
-            setTo(1000);
+            setTo('');
         };
         if (convertTo < convertFrom) {
-            setMessage('Unligal values, please fill currectly.');
-            convertFrom = 0;
-            convertTo = 1000;
             setFrom('');
             setTo('');
+            setMessage('Unligal values, please fill currectly.');
+            setTimeout(() => {setMessage('')},5000);
+            return
         }
         console.log(convertFrom, convertTo)
         try {
@@ -77,16 +82,18 @@ const Items = () => {
     <div className='root'>
         <div className='top'>
             <h1>Featured Products</h1>
-            <h4>Check out our favorite products of the month.</h4>
+            <h4>Check out our favorite products of the month</h4>
         </div>
         <div  className='filter'>
             <input type="number" step='0.1' placeholder='From price' value={from} onChange={(event) => setFrom(event.target.value)}/>
             <input type="number" step='0.1' placeholder='To price' value={to} onChange={(event) => setTo(event.target.value)}/>
             <button onClick={handleSelect}>Select</button>
-            <p>{message}</p>
             <button onClick={lowToHige}>Low To Height</button>
             <button onClick={HeightToLow}>Height To Low</button>
+            <button onClick={() => {navigate('/home')}}>Back</button>
+            <p>{message}</p>
         </div>
+        
         <div className='cards'>
             {items.map((item, index) => (
                 <div className='card' key={index}>
